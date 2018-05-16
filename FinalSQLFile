@@ -1,0 +1,196 @@
+DROP TABLE SURVEY CASCADE CONSTRAINTS PURGE;
+DROP TABLE CUSTOMER CASCADE CONSTRAINTS PURGE;
+DROP TABLE EMPLOYEE CASCADE CONSTRAINTS PURGE;
+DROP TABLE CHANNEL CASCADE CONSTRAINTS PURGE;
+DROP TABLE CHANNELTYPE CASCADE CONSTRAINTS PURGE;
+DROP TABLE PACKAGE CASCADE CONSTRAINTS PURGE;
+DROP TABLE SUPPLIER CASCADE CONSTRAINTS PURGE;
+DROP TABLE PROGRAM_CHANNEL CASCADE CONSTRAINTS PURGE;
+DROP TABLE PROGRAM CASCADE CONSTRAINTS PURGE;
+DROP TABLE RATING CASCADE CONSTRAINTS PURGE;
+
+
+/* EMPLOYEE TABLE
+	 DEPENDENCIES:
+	 - *NONE*
+  */
+CREATE TABLE EMPLOYEE (
+  EmployeeId NUMBER(5) NOT NULL CONSTRAINT PK_EmployeeID PRIMARY KEY,
+  FirstName VARCHAR2(20) NOT NULL,
+  LastName VARCHAR(20) NOT NULL
+);
+
+/* CUSTOMER TABLE
+	 DEPENDENCIES:
+	 - Employee
+	 */
+CREATE TABLE CUSTOMER (
+  CustomerId NUMBER(5) NOT NULL CONSTRAINT PK_CustomerID PRIMARY KEY,
+  FirstName VARCHAR2(30) NOT NULL,
+  LastName VARCHAR2(20) NOT NULL,
+  StartDate DATE NOT NULL,
+  BillingCycle NUMBER(2) NOT NULL,
+  Phone VARCHAR2(10) NOT NULL,
+  StreetAddress VARCHAR2(30) NOT NULL,
+  City VARCHAR2(30) NOT NULL,
+  State CHAR(2) NOT NULL,
+  Zip NUMBER(9) NOT NULL,
+  EmployeeId NUMBER(5) NOT NULL CONSTRAINT FK_Customer_EmployeeID REFERENCES EMPLOYEE(EmployeeId),
+  Status VARCHAR2(15) NOT NULL,
+  Reason VARCHAR2(30),
+  StatusDate DATE,
+  Email VARCHAR2(50) NOT NULL
+);
+/* CHANNELTYPE TABLE
+	 DEPENDENCIES:
+	 - *NONE*
+  */
+CREATE TABLE ChannelType (
+  ChannelTypeID Number(5) CONSTRAINT PK_ChannelTypeID PRIMARY KEY,
+  ChannelType Varchar2(20) NOT NULL
+);
+
+/* CHANNEL TABLE
+	 DEPENDENCIES:
+	 - CHANNELTYPE
+	 */
+CREATE TABLE CHANNEL (
+  ChannelId NUMBER(5) NOT NULL CONSTRAINT PK_ChannelID PRIMARY KEY,
+  ChannelName VARCHAR2(30) NOT NULL,
+  ChannelNumber NUMBER(3) NOT NULL,
+  ChannelTypeID NUMBER(5) NOT NULL CONSTRAINT FK_Channel_ChannelTypeID REFERENCES ChannelType(ChannelTypeID)
+);
+
+/* SURVEY TABLE.
+	 DEPENDENCIES:
+	 - CHANNEL
+	 - CUSTOMER
+	 */
+CREATE TABLE SURVEY (
+  SurveyId VARCHAR2(10) NOT NULL CONSTRAINT PK_SurveyId PRIMARY KEY,
+  CustomerId NUMBER(5) NOT NULL CONSTRAINT FK_Survey_CustomerID REFERENCES CUSTOMER(CustomerId),
+  SurveyDate DATE NOT NULL,
+  ChannelId NUMBER(5) NOT NULL CONSTRAINT FK_Survey_ChannelID REFERENCES CHANNEL(ChannelId)
+ );
+/* PACKAGE TABLE
+	 DEPENDENCIES:
+	 - *NONE*
+  */
+CREATE TABLE Package (
+  PackageID Number(5) CONSTRAINT PK_PackageID PRIMARY KEY,
+  PackageName Varchar2(30) NOT NULL,
+  PackagePrice Number(8,2) NOT NULL
+);
+/* SUPPLIER TABLE
+	 DEPENDENCIES:
+	 - *NONE*
+  */
+CREATE TABLE Supplier (
+  SupplierID Number(5) CONSTRAINT PK_SupplierID PRIMARY KEY,
+  Name Varchar2(30) NOT NULL,
+  StreetAddress Varchar2(20),
+  City Varchar2(20),
+  State Char(2),
+  Zip Varchar2(9),
+  Phone Varchar2(10),
+  ContactName Number(5)
+);
+/* RATING TABLE
+	 DEPENDENCIES:
+	 - *NONE*
+  */
+CREATE TABLE RATING (
+  RatingId NUMBER(3) NOT NULL CONSTRAINT PK_RatingID PRIMARY KEY,
+  RatingCode VARCHAR2(10) NOT NULL,
+  RatingDesc VARCHAR2(40) NOT NULL
+);
+/* PROGRAM TABLE
+	 DEPENDENCIES:
+	 - CHANNELTYPE
+   - RATING
+   - SUPPLIER
+  */
+CREATE TABLE PROGRAM (
+  ProgramID NUMBER(5) NOT NULL CONSTRAINT PK_ProgramID PRIMARY KEY,
+  Length NUMBER(3) NOT NULL,
+  ProgramName VARCHAR2(30) NOT NULL,
+  ChannelTypeId NUMBER(5) NOT NULL CONSTRAINT FK_Program_ChannelTypeID REFERENCES ChannelType(ChannelTypeID),
+  ProgramDesc VARCHAR2(20) NOT NULL,
+  RatingId NUMBER(5) NOT NULL CONSTRAINT FK_Program_RatingID REFERENCES RATING(RatingID),
+  SupplierId NUMBER(5) NOT NULL CONSTRAINT FK_Program_SupplierId REFERENCES SUPPLIER(SupplierID)
+);
+/* EMPLOYEE TABLE
+	 DEPENDENCIES:
+	 - CHANNEL
+   - PROGRAM
+  */
+CREATE TABLE PROGRAM_CHANNEL (
+  ProgramChannel NUMBER(5) NOT NULL CONSTRAINT PK_ProgramChannel PRIMARY KEY,
+  ChannelId NUMBER(5) NOT NULL CONSTRAINT FK_Program_Channel_ChannelID REFERENCES CHANNEL(ChannelId),
+  ProgramId NUMBER(5) NOT NULL CONSTRAINT FK_Program_Channel_ProgramId REFERENCES PROGRAM(ProgramID),
+  ShowDateTime DATE NOT NULL
+);
+INSERT INTO EMPLOYEE (EmployeeId, LastName, FirstName) 
+   VALUES (06516,'Jameson','Allen')
+/
+
+INSERT INTO CUSTOMER 
+(CustomerId, 
+FirstName, 
+LastName,
+StartDate,
+BillingCycle,
+Phone,
+StreetAddress,
+City,
+State,
+Zip,EmployeeID,Status,Reason,StatusDate,Email)
+VALUES (
+20712, 
+'Gregory',
+'Robinson', 
+'02-OCT-11','15',
+'2038787014',
+'155 West Main Street',
+'Orange',
+'CT',
+06415,
+06516,'inactive','unpaid','01-SEP-11','GregR@my.devry.edu')
+/
+INSERT INTO ChannelType (ChannelTypeId,ChannelType)
+VALUES (54678,'Movie');
+
+INSERT INTO Package (PackageID,PackageName,PackagePrice) 
+   VALUES (77890,'Movie Galore',30)
+/
+INSERT INTO Supplier
+(SupplierID,Name,StreetAddress,City,State,Zip,Phone,ContactName) 
+   VALUES(89890,'NBC','10 Wilshire BLVD #12','Los Angeles','CA','90210',
+   '9095621749',56789)
+/
+INSERT INTO RATING
+(RatingID,RatingCode,RatingDesc)
+VALUES
+(565,'TV-14','Intended for viewers aged 14 and over')
+/
+UPDATE Customer SET status = 'active' WHERE status='inactive'
+/
+
+UPDATE Customer SET reason = 'paidup' WHERE reason='unpaid'
+/
+
+UPDATE Customer SET startdate = '01-OCT-11' WHERE startdate='02-OCT-11'
+/
+
+UPDATE Customer SET startdate = '01-SEP-11' WHERE startdate='01-OCT-11'
+/
+
+UPDATE Customer SET status = 'inactive' WHERE sysdate>startdate
+
+UPDATE Customer SET reason = 'unpaid bill' WHERE status='inactive';
+/
+
+--Report 6
+SELECT packageid, packagename, packageprice
+FROM PACKAGE
+/
